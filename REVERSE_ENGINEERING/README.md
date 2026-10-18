@@ -1,33 +1,35 @@
-# APK Static Analysis — Ai-Studio
+# APK reverse-engineering workspace
 
-## Scope
-This repository was empty at inspection time. The supplied APK is a third-party Groww Android application (package/class strings include `com.nextbillion.groww` and `com.groww`). This note records basic artifact facts and a reproducible local analysis workflow. It does **not** include or reproduce Groww's proprietary source code, assets, UI, credentials, or backend endpoints.
+This directory documents an **authorized static-analysis workflow** for the APK supplied for this task. The APK itself and any extracted binary archive are not stored in this repository by this commit.
 
-## Supplied artifact facts
-- File name: `DOC-20261018-WA0008.apk`
-- Size: 86,303,468 bytes
-- SHA-256: `de97d945728d8ad55aa4dd3314d79e4e6cc8afae64e2c522e43baabbd0c40b6d`
-- APK entries: 8,861
-- DEX files: `classes.dex` through `classes8.dex`
-- `resources.arsc`: present
-- `AndroidManifest.xml`: present (binary Android XML)
-- Native `.so` libraries: none found in the APK root listing
+## Status
 
-## Reproducible local inspection
-Install Android build tools, JADX, and Apktool on a trusted workstation. Keep the APK in a private analysis directory and do not commit the APK or extracted proprietary app code into this repository.
+- APK ZIP inventory and DEX count were inspected in the analysis session.
+- The APK contains 8 DEX files and 8,861 ZIP entries.
+- The original Android manifest is binary XML until decoded.
+- A complete JADX Java-like reconstruction and Apktool resource/Smali decode have **not** been verified yet.
+- Raw ZIP extraction is not the same as complete decompilation.
+
+## Run locally
+
+Prerequisites: Java, JADX, Apktool, Python 3.
+
+Place the APK at `input/app.apk`, then run:
 
 ```bash
-sha256sum DOC-20261018-WA0008.apk
-apktool d -f DOC-20261018-WA0008.apk -o apktool-out
-jadx -d jadx-out DOC-20261018-WA0008.apk
+bash REVERSE_ENGINEERING/run_local_analysis.sh input/app.apk
 ```
 
-Useful review targets:
-1. Manifest permissions, exported components, deep links, and network security configuration.
-2. App-owned configuration and hard-coded secrets (report/redact findings; do not publish credentials).
-3. Network domains and API contracts for compatibility/security review.
-4. Third-party SDK inventory and outdated dependencies.
-5. Decompiled code only for authorized security review or interoperability; implement any replacement independently with original code and design.
+Outputs are created under `build/reverse-engineering/`:
+- `apktool/` — decoded resources, manifest and Smali
+- `jadx/` — reconstructed Java-like sources and resources
+- `inventory.txt` — APK entry list, DEX sizes and hashes
+- `SHA256SUMS.txt` — original APK checksum
 
-## Current limitation
-This environment could inspect the APK ZIP structure and DEX string samples, but does not have JADX or Apktool installed, and direct Git cloning is unavailable. Therefore a full Java/Kotlin decompilation and decoded manifest are **not yet completed**.
+## Repository hygiene and legal scope
+
+Do not commit third-party proprietary app code, signing keys, session tokens, personal data, or a full commercial APK unless you have the rights and authorization to distribute them. Keep generated decompilation output local/private for authorized analysis. For a compatible replacement, implement desired features independently using original code and assets.
+
+## Prior analysis artifact
+
+The uploaded file was named `DOC-20261018-WA0008.apk`. The prior session reported size 86,303,468 bytes and SHA-256 `de97d945728d8ad55aa4dd3314d79e4e6cc8afae64e2c522e43baabbd0c40b6d`. Verify these values against your local copy before relying on them.
