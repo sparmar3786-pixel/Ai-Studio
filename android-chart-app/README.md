@@ -12,3 +12,5 @@ Until a real backend is deployed and verified, the UI must be treated as demo/WA
 
 
 Build workflow updated to use the runner-provided Android SDK tools.
+
+Build note: workflow now locates sdkmanager dynamically and reports SDK path if unavailable.
