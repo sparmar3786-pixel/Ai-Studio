@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ai-Studio | Order Flow & Footprint</title>
+<style>
+:root{color-scheme:dark;--bg:#070b12;--panel:#0e1622;--panel2:#111d2c;--line:#223248;--muted:#8ca0b8;--text:#e8f0fa;--green:#27d7a0;--red:#ff637d;--blue:#66a8ff;--amber:#f4bf62}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#11243a 0,#070b12 52%);color:var(--text);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;border-bottom:1px solid var(--line);background:#08101bdc;position:sticky;top:0;z-index:3;backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#35dfb1,#3888ff);display:grid;place-items:center;color:#04121b;font-weight:900;font-size:17px}.eyebrow{font-size:10px;letter-spacing:.16em;color:var(--green);font-weight:800}.brand h1{font-size:17px;margin:1px 0 0;letter-spacing:.02em}.pill{font-size:11px;border:1px solid #6a4c22;background:#2a2114;color:var(--amber);padding:6px 9px;border-radius:999px;font-weight:700}
+main{max-width:1440px;margin:auto;padding:22px}.topline{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}.topline h2{margin:0;font-size:24px}.sub{color:var(--muted);margin-top:5px}.market-controls{display:flex;gap:8px;flex-wrap:wrap}.control{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:9px 12px;color:var(--text);font:inherit}
+.notice{border:1px solid #5d4827;background:#211b12;color:#e9ca91;padding:10px 13px;border-radius:10px;margin:0 0 18px;font-size:12px}
+.tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin-bottom:18px}.tab{border:1px solid transparent;border-bottom:2px solid transparent;background:transparent;color:var(--muted);padding:12px 16px;font-weight:800;cursor:pointer;border-radius:9px 9px 0 0}.tab[aria-selected=true]{color:var(--green);border-color:var(--line);border-bottom-color:var(--green);background:#10202b}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}.metric,.panel{background:linear-gradient(145deg,#101a28,#0b121d);border:1px solid var(--line);border-radius:14px}.metric{padding:15px}.metric .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.09em}.metric .value{font-size:22px;font-weight:800;margin-top:5px}.metric .hint{font-size:11px;color:var(--muted);margin-top:4px}.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(280px,.8fr);gap:14px}.panel{padding:16px;min-width:0}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.panel-head h3{margin:0;font-size:14px}.muted{color:var(--muted)}.small{font-size:11px}.chart{width:100%;display:block;min-height:260px;background:linear-gradient(180deg,#0b1420,#0b111a);border-radius:10px;border:1px solid #1c2a3b}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:10px}.dot{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:5px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:right;padding:10px 8px;border-bottom:1px solid #1c2938;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:700}.buy{color:var(--green)}.sell{color:var(--red)}.bar{height:6px;min-width:30px;border-radius:5px;background:#1b2b3b;overflow:hidden}.bar span{display:block;height:100%;border-radius:5px}.bar .b{background:var(--green)}.bar .s{background:var(--red)}.signalrow{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #1c2938}.signalrow:last-child{border:0}.badge{font-size:10px;padding:4px 7px;border-radius:6px;background:#162638;color:var(--blue);font-weight:800}.heatmap{display:grid;grid-template-columns:68px 1fr 1fr;gap:4px;align-items:stretch}.heatmap div{padding:9px 7px;text-align:center;border-radius:5px;font-size:12px;font-variant-numeric:tabular-nums}.heat-head{color:var(--muted);font-size:10px!important;text-transform:uppercase}.price{background:#142133;color:#cbd9e9;font-weight:800}.bid{background:rgba(255,99,125,var(--a,.3));color:#ffe0e6}.ask{background:rgba(39,215,160,var(--a,.3));color:#d7fff2}.centered{text-align:center;padding:30px 10px;color:var(--muted)}footer{padding:20px 0 8px;color:var(--muted);font-size:11px}
+[hidden]{display:none!important}@media(max-width:850px){main{padding:14px}.layout{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}header{padding:14px}.topline h2{font-size:20px}}@media(max-width:420px){.metrics{grid-template-columns:1fr 1fr}.metric{padding:11px}.metric .value{font-size:18px}.tab{padding:10px 9px;font-size:12px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">AS</div><div><div class="eyebrow">AI-STUDIO · MARKET MICROSTRUCTURE</div><h1>Order Flow & Footprint</h1></div></div><span class="pill" id="connection-badge">WAIT · LIVE FEED NOT CONNECTED</span></header>
+<main>
+<div class="topline"><div><h2>Advanced execution analytics</h2><div class="sub">Two independent workspaces · signal-only analysis · no order placement</div></div><div class="market-controls"><select id="market" class="control" aria-label="Market"><option>NIFTY</option><option>BANKNIFTY</option><option>MCX · CRUDEOIL</option><option>MCX · GOLD</option></select><select class="control" aria-label="Timeframe" id="tf"><option>1 minute</option><option>3 minutes</option><option>5 minutes</option><option>15 minutes</option></select></div></div>
+<div class="notice" id="feed-notice">WAIT: Groww adapter not connected. Connect a deployed backend using <code>?backend=wss://YOUR-HOST/ws/market</code>. Demo metrics remain clearly marked until live fields are verified.</div>
+<div class="tabs" role="tablist" aria-label="Chart workspaces"><button class="tab" id="tab-flow" role="tab" aria-selected="true" aria-controls="flow">01 · ORDER FLOW</button><button class="tab" id="tab-footprint" role="tab" aria-selected="false" aria-controls="footprint">02 · FOOTPRINT</button></div>
+<section id="flow" role="tabpanel" aria-labelledby="tab-flow">
+<div class="metrics">
+<div class="metric"><div class="label">Net volume delta</div><div class="value green">+18,420</div><div class="hint">Aggressive buy − sell · demo</div></div>
+<div class="metric"><div class="label">Cumulative delta</div><div class="value">+42.8K</div><div class="hint">Session running total · demo</div></div>
+<div class="metric"><div class="label">Buy / sell volume</div><div class="value">56.4% / 43.6%</div><div class="hint">Illustrative split · demo</div></div>
+<div class="metric"><div class="label">Market state</div><div class="value amber" id="market-state">WAIT</div><div class="hint" id="market-hint">Live quote not verified</div></div>
+</div>
+<div class="layout">
+<div class="panel"><div class="panel-head"><h3>Delta & price response</h3><span class="badge">CVD · DEMO</span></div>
+<svg class="chart" viewBox="0 0 760 300" role="img" aria-label="Illustrative price and cumulative delta chart">
+<defs><pattern id="grid" width="60" height="42" patternUnits="userSpaceOnUse"><path d="M60 0H0V42" fill="none" stroke="#1b2a3b" stroke-width="1"/></pattern><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#27d7a0" stop-opacity=".22"/><stop offset="1" stop-color="#27d7a0" stop-opacity="0"/></linearGradient></defs><rect width="760" height="300" fill="url(#grid)"/>
+<path d="M20 215 L75 202 L130 220 L185 178 L240 186 L295 145 L350 159 L405 122 L460 140 L515 104 L570 115 L625 80 L680 94 L740 52 L740 280 L20 280Z" fill="url(#area)"/>
+<path d="M20 215 L75 202 L130 220 L185 178 L240 186 L295 145 L350 159 L405 122 L460 140 L515 104 L570 115 L625 80 L680 94 L740 52" fill="none" stroke="#27d7a0" stroke-width="3" stroke-linejoin="round"/>
+<path d="M20 246 L75 230 L130 238 L185 218 L240 224 L295 192 L350 201 L405 175 L460 183 L515 159 L570 164 L625 136 L680 143 L740 118" fill="none" stroke="#66a8ff" stroke-width="2" stroke-dasharray="5 4"/>
+<text x="18" y="22" fill="#8ca0b8" font-size="11">BUYING PRESSURE (ILLUSTRATIVE)</text><text x="18" y="289" fill="#8ca0b8" font-size="10">09:20</text><text x="360" y="289" fill="#8ca0b8" font-size="10">11:30</text><text x="690" y="289" fill="#8ca0b8" font-size="10">15:20</text>
+</svg><div class="legend"><span><i class="dot" style="background:#27d7a0"></i>Price response</span><span><i class="dot" style="background:#66a8ff"></i>Cumulative delta</span><span>Demo illustration only</span></div></div>
+<div class="panel"><div class="panel-head"><h3>Order-flow diagnostics</h3><span class="badge">SIMULATED</span></div>
+<div class="signalrow"><div><b>Buy-side aggression</b><div class="muted small">Marketable buy volume</div></div><b class="green">56.4%</b></div>
+<div class="signalrow"><div><b>Sell-side aggression</b><div class="muted small">Marketable sell volume</div></div><b class="red">43.6%</b></div>
+<div class="signalrow"><div><b>Delta divergence</b><div class="muted small">Price vs CVD disagreement</div></div><span class="badge">NOT VERIFIED</span></div>
+<div class="signalrow"><div><b>Absorption zones</b><div class="muted small">Requires trade-level volume</div></div><span class="badge">DEMO ONLY</span></div>
+<div class="signalrow"><div><b>Decision gate</b><div class="muted small">Live feed freshness / validation</div></div><b class="amber">WAIT</b></div>
+</div></div>
+</section>
+<section id="footprint" role="tabpanel" aria-labelledby="tab-footprint" hidden>
+<div class="metrics">
+<div class="metric"><div class="label">Footprint delta</div><div class="value green">+2,460</div><div class="hint">Synthetic sample</div></div>
+<div class="metric"><div class="label">Max volume price</div><div class="value">24,850</div><div class="hint">Illustrative POC</div></div>
+<div class="metric"><div class="label">Imbalance levels</div><div class="value">4 : 2</div><div class="hint">Ask : bid · demo</div></div>
+<div class="metric"><div class="label">Data quality</div><div class="value amber" id="footprint-quality">UNVERIFIED</div><div class="hint">No aggressor-side trade tape</div></div>
+</div>
+<div class="layout">
+<div class="panel"><div class="panel-head"><h3>Bid × Ask volume ladder</h3><span class="badge">PRICE LEVEL FOOTPRINT</span></div>
+<div class="heatmap" id="heatmap"><div class="heat-head">PRICE</div><div class="heat-head">BID VOL</div><div class="heat-head">ASK VOL</div></div>
+<div class="legend"><span><i class="dot" style="background:#ff637d"></i>Bid traded volume</span><span><i class="dot" style="background:#27d7a0"></i>Ask traded volume</span><span>Intensity represents synthetic volume</span></div></div>
+<div class="panel"><div class="panel-head"><h3>Footprint interpretation</h3><span class="badge">NOT A SIGNAL</span></div>
+<div class="signalrow"><div><b>Stacked imbalance</b><div class="muted small">Adjacent price levels meeting ratio threshold</div></div><span class="badge">DEMO</span></div>
+<div class="signalrow"><div><b>POC / volume node</b><div class="muted small">Highest displayed volume level</div></div><b>24,850</b></div>
+<div class="signalrow"><div><b>Absorption</b><div class="muted small">Needs reliable aggressor-side trades</div></div><span class="badge">UNVERIFIED</span></div>
+<div class="signalrow"><div><b>Unfinished auction</b><div class="muted small">Requires valid high/low bid-ask prints</div></div><span class="badge">UNVERIFIED</span></div>
+<div class="signalrow"><div><b>Decision gate</b><div class="muted small">Until live data adapter is validated</div></div><b class="amber">WAIT</b></div>
+</div></div>
+</section>
+<footer>Groww quote connection is read-only. Order Flow / Footprint metrics are not certified live calculations: this adapter returns quote/book snapshots, not aggressor-side executed trade prints. Exact footprint, CVD, absorption and stacked imbalance remain unavailable until a supported trade-level feed is verified.</footer>
+</main>
+<script>
+const tabs=[document.getElementById('tab-flow'),document.getElementById('tab-footprint')];
+const panels=[document.getElementById('flow'),document.getElementById('footprint')];
+tabs.forEach((tab,i)=>tab.addEventListener('click',()=>{tabs.forEach((t,j)=>{t.setAttribute('aria-selected',String(i===j));panels[j].hidden=i!==j;});}));
+const levels=[{p:'24,875',b:410,a:930},{p:'24,870',b:680,a:520},{p:'24,865',b:320,a:840},{p:'24,860',b:760,a:610},{p:'24,855',b:440,a:990},{p:'24,850',b:1210,a:1480},{p:'24,845',b:870,a:530},{p:'24,840',b:960,a:420},{p:'24,835',b:520,a:780}];
+const heat=document.getElementById('heatmap');
+levels.forEach(x=>{const max=1500;const p=document.createElement('div');p.className='price';p.textContent=x.p;const b=document.createElement('div');b.className='bid';b.style.setProperty('--a',String(.12+.55*x.b/max));b.textContent=x.b.toLocaleString('en-US');const a=document.createElement('div');a.className='ask';a.style.setProperty('--a',String(.12+.55*x.a/max));a.textContent=x.a.toLocaleString('en-US');heat.append(p,b,a);});
+let liveSocket=null;
+const badge=document.getElementById('connection-badge');
+const notice=document.getElementById('feed-notice');
+const marketState=document.getElementById('market-state');
+const marketHint=document.getElementById('market-hint');
+const quality=document.getElementById('footprint-quality');
+const symbolMap={'NIFTY':{exchange:'NSE',segment:'FNO',symbol:'NIFTY'},'BANKNIFTY':{exchange:'NSE',segment:'FNO',symbol:'BANKNIFTY'},'MCX · CRUDEOIL':null,'MCX · GOLD':null};
+function feedUrl(){
+  const chosen=document.getElementById('market').value;
+  const inst=symbolMap[chosen];
+  if(!inst)return null;
+  const params=new URLSearchParams({exchange:inst.exchange,segment:inst.segment,symbol:inst.symbol});
+  const configured=new URLSearchParams(window.location.search).get('backend');
+  let base;
+  if(configured){base=configured.replace(/\/$/,'');}
+  else {base=(window.location.protocol==='https:'?'wss://':'ws://')+'127.0.0.1:8000';}
+  return base+(base.includes('/ws/market')?'':'/ws/market')+'?'+params.toString();
+}
+function connectFeed(){
+  if(liveSocket){try{liveSocket.close();}catch(e){} liveSocket=null;}
+  const url=feedUrl();
+  if(!url){
+    badge.textContent='UNSUPPORTED · MCX';marketState.textContent='WAIT';marketHint.textContent='Groww API adapter supports NSE/BSE CASH/FNO only';notice.textContent='WAIT: This Groww API integration does not support MCX commodity data. Demo chart values are not live.';return;
+  }
+  badge.textContent='CONNECTING · WAIT';marketState.textContent='WAIT';marketHint.textContent='Waiting for timestamp-validated quote';
+  try{
+    liveSocket=new WebSocket(url);
+    liveSocket.onopen=()=>{badge.textContent='CONNECTED · VERIFYING';};
+    liveSocket.onmessage=(event)=>{
+      let msg;try{msg=JSON.parse(event.data);}catch(e){return;}
+      if(msg.status!=='LIVE'||!msg.data){
+        badge.textContent='WAIT · FEED INVALID/STALE';marketState.textContent='WAIT';marketHint.textContent=msg.reason||'Live feed not validated';return;
+      }
+      const d=msg.data;
+      badge.textContent='LIVE QUOTE · FOOTPRINT NOT LIVE';
+      notice.textContent='Groww quote connected for '+d.symbol+' · last price '+d.last_price+' · received '+d.received_at+'. Order Flow and Footprint calculations remain DEMO/UNVERIFIED because quote snapshots are not executed bid/ask trade prints.';
+      marketState.textContent='WAIT';marketHint.textContent='Quote received; signal calculations not enabled';
+      quality.textContent='UNVERIFIED';
+    };
+    liveSocket.onerror=()=>{badge.textContent='WAIT · CONNECTION ERROR';marketState.textContent='WAIT';marketHint.textContent='Check backend URL, token and subscription';};
+    liveSocket.onclose=()=>{if(badge.textContent.startsWith('LIVE')){badge.textContent='WAIT · FEED DISCONNECTED';marketState.textContent='WAIT';marketHint.textContent='Feed disconnected';}};
+  }catch(e){badge.textContent='WAIT · CONNECTION FAILED';}
+}
+document.getElementById('market').addEventListener('change',connectFeed);
+document.getElementById('tf').addEventListener('change',()=>{notice.textContent='Timeframe selection is UI-only in this prototype; quote feed does not yet generate interval candles.';});
+connectFeed();
+</script>
+</body></html>
