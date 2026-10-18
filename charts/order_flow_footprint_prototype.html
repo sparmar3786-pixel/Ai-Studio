@@ -17,17 +17,17 @@ main{max-width:1440px;margin:auto;padding:22px}.topline{display:flex;justify-con
 </style>
 </head>
 <body>
-<header><div class="brand"><div class="logo">AS</div><div><div class="eyebrow">AI-STUDIO · MARKET MICROSTRUCTURE</div><h1>Order Flow & Footprint</h1></div></div><span class="pill">DEMO DATA · NOT LIVE</span></header>
+<header><div class="brand"><div class="logo">AS</div><div><div class="eyebrow">AI-STUDIO · MARKET MICROSTRUCTURE</div><h1>Order Flow & Footprint</h1></div></div><span class="pill" id="connection-badge">WAIT · LIVE FEED NOT CONNECTED</span></header>
 <main>
 <div class="topline"><div><h2>Advanced execution analytics</h2><div class="sub">Two independent workspaces · signal-only analysis · no order placement</div></div><div class="market-controls"><select id="market" class="control" aria-label="Market"><option>NIFTY</option><option>BANKNIFTY</option><option>MCX · CRUDEOIL</option><option>MCX · GOLD</option></select><select class="control" aria-label="Timeframe" id="tf"><option>1 minute</option><option>3 minutes</option><option>5 minutes</option><option>15 minutes</option></select></div></div>
-<div class="notice">Prototype preview: values below are synthetic demo data. No Groww API/session is connected. Do not use these numbers for trading decisions.</div>
+<div class="notice" id="feed-notice">WAIT: Groww adapter not connected. Connect a deployed backend using <code>?backend=wss://YOUR-HOST/ws/market</code>. Demo metrics remain clearly marked until live fields are verified.</div>
 <div class="tabs" role="tablist" aria-label="Chart workspaces"><button class="tab" id="tab-flow" role="tab" aria-selected="true" aria-controls="flow">01 · ORDER FLOW</button><button class="tab" id="tab-footprint" role="tab" aria-selected="false" aria-controls="footprint">02 · FOOTPRINT</button></div>
 <section id="flow" role="tabpanel" aria-labelledby="tab-flow">
 <div class="metrics">
 <div class="metric"><div class="label">Net volume delta</div><div class="value green">+18,420</div><div class="hint">Aggressive buy − sell · demo</div></div>
 <div class="metric"><div class="label">Cumulative delta</div><div class="value">+42.8K</div><div class="hint">Session running total · demo</div></div>
 <div class="metric"><div class="label">Buy / sell volume</div><div class="value">56.4% / 43.6%</div><div class="hint">Illustrative split · demo</div></div>
-<div class="metric"><div class="label">Market state</div><div class="value amber">WAIT</div><div class="hint">Live feed not connected</div></div>
+<div class="metric"><div class="label">Market state</div><div class="value amber" id="market-state">WAIT</div><div class="hint" id="market-hint">Live quote not verified</div></div>
 </div>
 <div class="layout">
 <div class="panel"><div class="panel-head"><h3>Delta & price response</h3><span class="badge">CVD · DEMO</span></div>
@@ -51,7 +51,7 @@ main{max-width:1440px;margin:auto;padding:22px}.topline{display:flex;justify-con
 <div class="metric"><div class="label">Footprint delta</div><div class="value green">+2,460</div><div class="hint">Synthetic sample</div></div>
 <div class="metric"><div class="label">Max volume price</div><div class="value">24,850</div><div class="hint">Illustrative POC</div></div>
 <div class="metric"><div class="label">Imbalance levels</div><div class="value">4 : 2</div><div class="hint">Ask : bid · demo</div></div>
-<div class="metric"><div class="label">Data quality</div><div class="value amber">UNVERIFIED</div><div class="hint">No exchange trade feed</div></div>
+<div class="metric"><div class="label">Data quality</div><div class="value amber" id="footprint-quality">UNVERIFIED</div><div class="hint">No aggressor-side trade tape</div></div>
 </div>
 <div class="layout">
 <div class="panel"><div class="panel-head"><h3>Bid × Ask volume ladder</h3><span class="badge">PRICE LEVEL FOOTPRINT</span></div>
@@ -65,7 +65,7 @@ main{max-width:1440px;margin:auto;padding:22px}.topline{display:flex;justify-con
 <div class="signalrow"><div><b>Decision gate</b><div class="muted small">Until live data adapter is validated</div></div><b class="amber">WAIT</b></div>
 </div></div>
 </section>
-<footer>Engineering prototype only. Live integration requires an authorized Groww data interface with documented permissions, timestamps, and bid/ask or trade-level volume. If those fields are unavailable, exact footprint/absorption analytics must remain disabled or explicitly approximate.</footer>
+<footer>Groww quote connection is read-only. Order Flow / Footprint metrics are not certified live calculations: this adapter returns quote/book snapshots, not aggressor-side executed trade prints. Exact footprint, CVD, absorption and stacked imbalance remain unavailable until a supported trade-level feed is verified.</footer>
 </main>
 <script>
 const tabs=[document.getElementById('tab-flow'),document.getElementById('tab-footprint')];
@@ -74,7 +74,51 @@ tabs.forEach((tab,i)=>tab.addEventListener('click',()=>{tabs.forEach((t,j)=>{t.s
 const levels=[{p:'24,875',b:410,a:930},{p:'24,870',b:680,a:520},{p:'24,865',b:320,a:840},{p:'24,860',b:760,a:610},{p:'24,855',b:440,a:990},{p:'24,850',b:1210,a:1480},{p:'24,845',b:870,a:530},{p:'24,840',b:960,a:420},{p:'24,835',b:520,a:780}];
 const heat=document.getElementById('heatmap');
 levels.forEach(x=>{const max=1500;const p=document.createElement('div');p.className='price';p.textContent=x.p;const b=document.createElement('div');b.className='bid';b.style.setProperty('--a',String(.12+.55*x.b/max));b.textContent=x.b.toLocaleString('en-US');const a=document.createElement('div');a.className='ask';a.style.setProperty('--a',String(.12+.55*x.a/max));a.textContent=x.a.toLocaleString('en-US');heat.append(p,b,a);});
-document.getElementById('market').addEventListener('change',()=>{document.querySelectorAll('.metric .hint').forEach(x=>x.title='Market selector changed; values remain synthetic demo data.');});
-document.getElementById('tf').addEventListener('change',()=>{document.querySelectorAll('.metric .hint').forEach(x=>x.title='Timeframe selector changed; chart values remain synthetic demo data.');});
+let liveSocket=null;
+const badge=document.getElementById('connection-badge');
+const notice=document.getElementById('feed-notice');
+const marketState=document.getElementById('market-state');
+const marketHint=document.getElementById('market-hint');
+const quality=document.getElementById('footprint-quality');
+const symbolMap={'NIFTY':{exchange:'NSE',segment:'FNO',symbol:'NIFTY'},'BANKNIFTY':{exchange:'NSE',segment:'FNO',symbol:'BANKNIFTY'},'MCX · CRUDEOIL':null,'MCX · GOLD':null};
+function feedUrl(){
+  const chosen=document.getElementById('market').value;
+  const inst=symbolMap[chosen];
+  if(!inst)return null;
+  const params=new URLSearchParams({exchange:inst.exchange,segment:inst.segment,symbol:inst.symbol});
+  const configured=new URLSearchParams(window.location.search).get('backend');
+  let base;
+  if(configured){base=configured.replace(/\/$/,'');}
+  else {base=(window.location.protocol==='https:'?'wss://':'ws://')+'127.0.0.1:8000';}
+  return base+(base.includes('/ws/market')?'':'/ws/market')+'?'+params.toString();
+}
+function connectFeed(){
+  if(liveSocket){try{liveSocket.close();}catch(e){} liveSocket=null;}
+  const url=feedUrl();
+  if(!url){
+    badge.textContent='UNSUPPORTED · MCX';marketState.textContent='WAIT';marketHint.textContent='Groww API adapter supports NSE/BSE CASH/FNO only';notice.textContent='WAIT: This Groww API integration does not support MCX commodity data. Demo chart values are not live.';return;
+  }
+  badge.textContent='CONNECTING · WAIT';marketState.textContent='WAIT';marketHint.textContent='Waiting for timestamp-validated quote';
+  try{
+    liveSocket=new WebSocket(url);
+    liveSocket.onopen=()=>{badge.textContent='CONNECTED · VERIFYING';};
+    liveSocket.onmessage=(event)=>{
+      let msg;try{msg=JSON.parse(event.data);}catch(e){return;}
+      if(msg.status!=='LIVE'||!msg.data){
+        badge.textContent='WAIT · FEED INVALID/STALE';marketState.textContent='WAIT';marketHint.textContent=msg.reason||'Live feed not validated';return;
+      }
+      const d=msg.data;
+      badge.textContent='LIVE QUOTE · FOOTPRINT NOT LIVE';
+      notice.textContent='Groww quote connected for '+d.symbol+' · last price '+d.last_price+' · received '+d.received_at+'. Order Flow and Footprint calculations remain DEMO/UNVERIFIED because quote snapshots are not executed bid/ask trade prints.';
+      marketState.textContent='WAIT';marketHint.textContent='Quote received; signal calculations not enabled';
+      quality.textContent='UNVERIFIED';
+    };
+    liveSocket.onerror=()=>{badge.textContent='WAIT · CONNECTION ERROR';marketState.textContent='WAIT';marketHint.textContent='Check backend URL, token and subscription';};
+    liveSocket.onclose=()=>{if(badge.textContent.startsWith('LIVE')){badge.textContent='WAIT · FEED DISCONNECTED';marketState.textContent='WAIT';marketHint.textContent='Feed disconnected';}};
+  }catch(e){badge.textContent='WAIT · CONNECTION FAILED';}
+}
+document.getElementById('market').addEventListener('change',connectFeed);
+document.getElementById('tf').addEventListener('change',()=>{notice.textContent='Timeframe selection is UI-only in this prototype; quote feed does not yet generate interval candles.';});
+connectFeed();
 </script>
 </body></html>
